@@ -3,6 +3,7 @@ import express from 'express'
 import cors from 'cors'
 
 import pool from './config/db.js'
+import { runMigrations } from './config/migrate.js'
 import authRouter from './routes/auth.js'
 import healthRouter from './routes/health.js'
 
@@ -32,8 +33,9 @@ async function start() {
   try {
     await pool.query('SELECT 1')
     console.log('[DB] Conexão OK')
+    await runMigrations()
   } catch (e) {
-    console.error('[DB] Falha na conexão:', e.message)
+    console.error('[DB] Falha na inicialização:', e.message)
     process.exit(1)
   }
 
