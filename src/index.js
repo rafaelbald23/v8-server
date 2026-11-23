@@ -4,7 +4,9 @@ import cors from 'cors'
 
 import pool from './config/db.js'
 import { runMigrations } from './config/migrate.js'
+import './config/passport.js'
 import authRouter from './routes/auth.js'
+import socialAuthRouter from './routes/socialAuth.js'
 import healthRouter from './routes/health.js'
 
 const app = express()
@@ -22,6 +24,7 @@ app.use(express.json())
 // ── Rotas ─────────────────────────────────────────────────────
 app.use('/api/health', healthRouter)
 app.use('/api/auth',   authRouter)
+app.use('/api/auth',   socialAuthRouter)
 
 // 404
 app.use((req, res) => {
