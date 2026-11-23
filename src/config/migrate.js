@@ -9,6 +9,7 @@ export async function runMigrations() {
   const migrations = [
     '001_initial_schema.sql',
     '002_full_schema.sql',
+    '003_social_accounts.sql',
   ]
 
   for (const file of migrations) {
