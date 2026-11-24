@@ -1,6 +1,6 @@
-import pool from '../config/db.js'
+﻿import pool from '../config/db.js'
 
-// ── GET /api/tomador/perfil ───────────────────────────────────
+// ÔöÇÔöÇ GET /api/tomador/perfil ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
 export async function getPerfil(req, res) {
   try {
     const result = await pool.query(
@@ -16,7 +16,7 @@ export async function getPerfil(req, res) {
       [req.user.id]
     )
     if (!result.rows.length)
-      return res.status(404).json({ error: 'Tomador não encontrado' })
+      return res.status(404).json({ error: 'Tomador n├úo encontrado' })
 
     res.json({ perfil: result.rows[0] })
   } catch (e) {
@@ -25,7 +25,7 @@ export async function getPerfil(req, res) {
   }
 }
 
-// ── PUT /api/tomador/perfil ───────────────────────────────────
+// ÔöÇÔöÇ PUT /api/tomador/perfil ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
 export async function upsertPerfil(req, res) {
   const {
     cpf_cnpj, tipo_pessoa, data_nascimento, telefone, whatsapp,
@@ -34,11 +34,11 @@ export async function upsertPerfil(req, res) {
     finalidade_credito,
   } = req.body
 
-  // Validações básicas
+  // Valida├º├Áes b├ísicas
   if (cpf_cnpj) {
     const digits = cpf_cnpj.replace(/\D/g, '')
     if (digits.length !== 11 && digits.length !== 14)
-      return res.status(400).json({ error: 'CPF deve ter 11 dígitos ou CNPJ 14 dígitos' })
+      return res.status(400).json({ error: 'CPF deve ter 11 d├¡gitos ou CNPJ 14 d├¡gitos' })
   }
 
   if (tipo_pessoa && !['pf', 'pj'].includes(tipo_pessoa))
@@ -95,7 +95,7 @@ export async function upsertPerfil(req, res) {
   }
 }
 
-// ── GET /api/tomador/status ───────────────────────────────────
+// ÔöÇÔöÇ GET /api/tomador/status ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
 // Retorna o status de onboarding do tomador
 export async function getStatus(req, res) {
   try {

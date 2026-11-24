@@ -7,7 +7,6 @@ import { isValidEmail, isValidPassword, sanitizeEmail } from '../utils/validator
 export async function register(req, res) {
   const { name, email, password, role } = req.body
 
-  // Validações
   if (!name || typeof name !== 'string' || name.trim().length < 2)
     return res.status(400).json({ error: 'Nome deve ter ao menos 2 caracteres' })
 
@@ -19,18 +18,13 @@ export async function register(req, res) {
       error: 'Senha deve ter no mínimo 8 caracteres, com letras e números',
     })
 
-  // Apenas tomador e investidor podem se auto-cadastrar
   const allowedRoles = ['tomador', 'investidor']
   const userRole = allowedRoles.includes(role) ? role : 'tomador'
 
   try {
     const cleanEmail = sanitizeEmail(email)
 
-    // Verifica duplicidade
-    const existing = await pool.query(
-      'SELECT id FROM users WHERE email = $1',
-      [cleanEmail]
-    )
+    const existing = await pool.query('SELECT id FROM users WHERE email = $1', [cleanEmail])
     if (existing.rows.length > 0)
       return res.status(409).json({ error: 'Email já cadastrado' })
 
@@ -38,15 +32,10 @@ export async function register(req, res) {
 
     const result = await pool.query(
       `INSERT INTO users (name, email, password_hash, role, ativo, status)
-       VALUES ($1, $2, $3, $4, $5, $6)
+       VALUES ($1,$2,$3,$4,$5,$6)
        RETURNING id, name, email, role, ativo, status, criado_em`,
       [
-        name.trim(),
-        cleanEmail,
-        password_hash,
-        userRole,
-        // tomador só ativa após pagar a taxa (Sprint 4)
-        // investidor ativa imediatamente
+        name.trim(), cleanEmail, password_hash, userRole,
         userRole === 'investidor',
         userRole === 'investidor' ? 'ativo' : 'pendente',
       ]
@@ -57,7 +46,7 @@ export async function register(req, res) {
 
     res.status(201).json({ token, user })
   } catch (e) {
-    console.error('[AUTH] register error:', e.message)
+    console.error('[AUTH] register:', e.message)
     res.status(500).json({ error: 'Erro interno' })
   }
 }
@@ -68,37 +57,40 @@ export async function login(req, res) {
 
   if (!isValidEmail(email))
     return res.status(400).json({ error: 'Email inválido' })
-
   if (!password)
     return res.status(400).json({ error: 'Senha é obrigatória' })
 
   try {
     const cleanEmail = sanitizeEmail(email)
-
-    const result = await pool.query(
-      'SELECT * FROM users WHERE email = $1',
-      [cleanEmail]
-    )
+    const result = await pool.query('SELECT * FROM users WHERE email = $1', [cleanEmail])
     const user = result.rows[0]
 
-    // Resposta genérica para não revelar se o email existe
     if (!user) return res.status(401).json({ error: 'Credenciais inválidas' })
 
     const ok = await bcrypt.compare(password, user.password_hash)
     if (!ok) return res.status(401).json({ error: 'Credenciais inválidas' })
 
-    if (!user.ativo)
+    // Conta suspensa/bloqueada não pode entrar
+    if (['suspenso', 'bloqueado'].includes(user.status))
       return res.status(403).json({
-        error: 'Conta pendente de ativação',
-        code: 'ACCOUNT_PENDING',
+        error: `Conta ${user.status}. Entre em contato com o suporte.`,
+        code: 'ACCOUNT_BLOCKED',
       })
 
     const payload = { id: user.id, role: user.role, name: user.name, email: user.email }
-    const token = signToken(payload)
+    const token   = signToken(payload)
 
-    res.json({ token, user: payload })
+    // Retorna o status do onboarding junto — o frontend decide o redirect
+    res.json({
+      token,
+      user: payload,
+      onboarding: {
+        ativo:  user.ativo,
+        status: user.status,  // 'pendente' | 'ativo' | 'suspenso' | 'bloqueado'
+      },
+    })
   } catch (e) {
-    console.error('[AUTH] login error:', e.message)
+    console.error('[AUTH] login:', e.message)
     res.status(500).json({ error: 'Erro interno' })
   }
 }
@@ -106,23 +98,34 @@ export async function login(req, res) {
 // ── GET /api/auth/me ──────────────────────────────────────────
 export async function me(req, res) {
   try {
+    // Busca o status de onboarding atualizado do banco
     const result = await pool.query(
-      'SELECT id, name, email, role, ativo, status, criado_em FROM users WHERE id = $1',
+      `SELECT u.id, u.name, u.email, u.role, u.ativo, u.status,
+              (SELECT status FROM payment_orders po
+               JOIN servicos s ON s.id = po.servico_id
+               WHERE po.user_id = u.id AND s.codigo = 'TAXA_CADASTRO'
+               ORDER BY po.criado_em DESC LIMIT 1) AS taxa_status
+       FROM users u WHERE u.id = $1`,
       [req.user.id]
     )
     const user = result.rows[0]
     if (!user) return res.status(404).json({ error: 'Usuário não encontrado' })
 
-    res.json({ user })
+    res.json({
+      user,
+      onboarding: {
+        ativo:       user.ativo,
+        status:      user.status,
+        taxa_status: user.taxa_status || null,
+      },
+    })
   } catch (e) {
-    console.error('[AUTH] me error:', e.message)
+    console.error('[AUTH] me:', e.message)
     res.status(500).json({ error: 'Erro interno' })
   }
 }
 
 // ── POST /api/auth/logout ─────────────────────────────────────
-// Stateless JWT: o logout é client-side (descarta o token)
-// Aqui apenas confirmamos o recebimento para o frontend
 export function logout(_req, res) {
   res.json({ message: 'Logout realizado com sucesso' })
 }
