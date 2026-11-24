@@ -5,13 +5,17 @@ import cors from 'cors'
 import pool from './config/db.js'
 import { runMigrations } from './config/migrate.js'
 import './config/passport.js'
-import authRouter from './routes/auth.js'
-import socialAuthRouter from './routes/socialAuth.js'
-import healthRouter from './routes/health.js'
-import adminRouter from './routes/admin.js'
-import tomadorRouter from './routes/tomador.js'
 
-const app = express()
+import healthRouter         from './routes/health.js'
+import authRouter           from './routes/auth.js'
+import socialAuthRouter     from './routes/socialAuth.js'
+import adminRouter          from './routes/admin.js'
+import documentosAdminRouter from './routes/documentosAdmin.js'
+import tomadorRouter        from './routes/tomador.js'
+import contatosRouter       from './routes/contatos.js'
+import lgpdRouter           from './routes/lgpd.js'
+
+const app  = express()
 const PORT = process.env.PORT || 3000
 
 // ── Middlewares ───────────────────────────────────────────────
@@ -24,11 +28,14 @@ app.use(cors({
 app.use(express.json())
 
 // ── Rotas ─────────────────────────────────────────────────────
-app.use('/api/health', healthRouter)
-app.use('/api/auth',   authRouter)
-app.use('/api/auth',   socialAuthRouter)
-app.use('/api/admin',   adminRouter)
-app.use('/api/tomador', tomadorRouter)
+app.use('/api/health',           healthRouter)
+app.use('/api/auth',             authRouter)
+app.use('/api/auth',             socialAuthRouter)
+app.use('/api/admin',            adminRouter)
+app.use('/api/admin',            documentosAdminRouter)
+app.use('/api/tomador',          tomadorRouter)
+app.use('/api/tomador/contatos', contatosRouter)
+app.use('/api/lgpd',             lgpdRouter)
 
 // 404
 app.use((req, res) => {
