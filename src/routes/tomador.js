@@ -1,4 +1,4 @@
-import { Router } from 'express'
+﻿import { Router } from 'express'
 import { auth } from '../middlewares/auth.js'
 import { isTomador } from '../middlewares/roles.js'
 import { requireAtivo } from '../middlewares/requireAtivo.js'
@@ -6,8 +6,8 @@ import { getPerfil, upsertPerfil, getStatus } from '../controllers/tomador.contr
 
 const router = Router()
 
-// Todas as rotas exigem token válido + role tomador
-// Nota: requireAtivo não é aplicado aqui pois tomador pode
+// Todas as rotas exigem token v├ílido + role tomador
+// Nota: requireAtivo n├úo ├® aplicado aqui pois tomador pode
 // acessar o perfil mesmo antes de pagar a taxa (status pendente)
 router.use(auth, isTomador)
 
