@@ -10,6 +10,7 @@ import socialAuthRouter from './routes/socialAuth.js'
 import healthRouter from './routes/health.js'
 import adminRouter from './routes/admin.js'
 import tomadorRouter from './routes/tomador.js'
+import documentosAdminRouter from './routes/documentosAdmin.js'
 
 const app = express()
 const PORT = process.env.PORT || 3000
@@ -28,6 +29,7 @@ app.use('/api/health', healthRouter)
 app.use('/api/auth',   authRouter)
 app.use('/api/auth',   socialAuthRouter)
 app.use('/api/admin',   adminRouter)
+app.use('/api/admin',   documentosAdminRouter)
 app.use('/api/tomador', tomadorRouter)
 
 // 404
