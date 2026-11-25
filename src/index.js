@@ -3,8 +3,13 @@ import express from 'express'
 import cors from 'cors'
 
 import pool from './config/db.js'
+import { runMigrations } from './config/migrate.js'
+import './config/passport.js'
 import authRouter from './routes/auth.js'
+import socialAuthRouter from './routes/socialAuth.js'
 import healthRouter from './routes/health.js'
+import adminRouter from './routes/admin.js'
+import tomadorRouter from './routes/tomador.js'
 
 const app = express()
 const PORT = process.env.PORT || 3000
@@ -21,6 +26,9 @@ app.use(express.json())
 // ── Rotas ─────────────────────────────────────────────────────
 app.use('/api/health', healthRouter)
 app.use('/api/auth',   authRouter)
+app.use('/api/auth',   socialAuthRouter)
+app.use('/api/admin',   adminRouter)
+app.use('/api/tomador', tomadorRouter)
 
 // 404
 app.use((req, res) => {
@@ -32,8 +40,9 @@ async function start() {
   try {
     await pool.query('SELECT 1')
     console.log('[DB] Conexão OK')
+    await runMigrations()
   } catch (e) {
-    console.error('[DB] Falha na conexão:', e.message)
+    console.error('[DB] Falha na inicialização:', e.message)
     process.exit(1)
   }
 
